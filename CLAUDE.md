@@ -22,7 +22,8 @@ VS Code extension with an embedded React webview panel.
 - The extension registers a `WebviewViewProvider` for the view `arcadia.panelView`, which lives in the bottom panel (next to Terminal).
 - On resolve, it reads `dist/webview/index.html` and rewrites `./` asset paths to `webview.asWebviewUri()` URIs.
 - The command `arcadia.showPanel` focuses the panel.
-- The webview communicates with the extension via `postMessage`. Clicking "Open Claude Code" sends `openClaude`, the extension creates a named terminal running `claude` and replies with `agentCreated`. Each session gets an "Agent #n" button; clicking it sends `focusAgent` to show that terminal. Closing a terminal sends `agentClosed` to remove its button.
+- The webview communicates with the extension via `postMessage`. Clicking "Open Claude Code" sends `openClaude`, the extension creates a named terminal running `claude` and replies with `agentCreated`. Each session gets an "Agent #n" button; clicking it sends `focusAgent` to show that terminal. Each agent button has a close (✕) button that sends `closeAgent` to dispose of the terminal. Closing a terminal (manually or via the close button) sends `agentClosed` to remove its button.
+- On resolve, the extension adopts any existing VS Code terminals whose name matches `Claude Code #N`. It also listens to `onDidOpenTerminal` to detect Claude Code terminals created outside the extension. The webview sends `webviewReady` on mount; the extension responds with `existingAgents` containing all tracked agent IDs.
 
 ## Build
 
