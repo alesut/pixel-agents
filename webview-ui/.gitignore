@@ -26,3 +26,4 @@ dist-ssr
 # Privately licensed files
 */assets/*
 !*/assets/characters/
+!*/assets/default-layout.json

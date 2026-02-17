@@ -16,6 +16,10 @@
       {
         "command": "arcadia.showPanel",
         "title": "Arcadia: Show Panel"
+      },
+      {
+        "command": "arcadia.exportDefaultLayout",
+        "title": "Arcadia: Export Layout as Default"
       }
     ],
     "viewsContainers": {

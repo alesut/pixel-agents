@@ -27,6 +27,7 @@ export const CHAR_COUNT = 6;
 // ── VS Code Identifiers ─────────────────────────────────────
 export const VIEW_ID = 'arcadia.panelView';
 export const COMMAND_SHOW_PANEL = 'arcadia.showPanel';
+export const COMMAND_EXPORT_DEFAULT_LAYOUT = 'arcadia.exportDefaultLayout';
 export const WORKSPACE_KEY_AGENTS = 'arcadia.agents';
 export const WORKSPACE_KEY_AGENT_SEATS = 'arcadia.agentSeats';
 export const WORKSPACE_KEY_LAYOUT = 'arcadia.layout';

@@ -12,7 +12,7 @@ import {
 	getProjectDirPath,
 } from './agentManager.js';
 import { ensureProjectScan } from './fileWatcher.js';
-import { loadFurnitureAssets, sendAssetsToWebview, loadFloorTiles, sendFloorTilesToWebview, loadWallTiles, sendWallTilesToWebview, loadCharacterSprites, sendCharacterSpritesToWebview } from './assetLoader.js';
+import { loadFurnitureAssets, sendAssetsToWebview, loadFloorTiles, sendFloorTilesToWebview, loadWallTiles, sendWallTilesToWebview, loadCharacterSprites, sendCharacterSpritesToWebview, loadDefaultLayout } from './assetLoader.js';
 import { WORKSPACE_KEY_AGENT_SEATS, WORKSPACE_KEY_LAYOUT } from './constants.js';
 
 export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
@@ -32,6 +32,9 @@ export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
 	activeAgentId = { current: null as number | null };
 	knownJsonlFiles = new Set<string>();
 	projectScanTimer = { current: null as ReturnType<typeof setInterval> | null };
+
+	// Bundled default layout (loaded from assets/default-layout.json)
+	defaultLayout: Record<string, unknown> | null = null;
 
 	constructor(private readonly context: vscode.ExtensionContext) {}
 
@@ -121,12 +124,15 @@ export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
 							if (!assetsRoot) {
 								console.log('[Extension] ⚠️  No assets directory found');
 								if (this.webview) {
-									sendLayout(this.context, this.webview);
+									sendLayout(this.context, this.webview, this.defaultLayout);
 								}
 								return;
 							}
 
 							console.log('[Extension] Using assetsRoot:', assetsRoot);
+
+							// Load bundled default layout
+							this.defaultLayout = loadDefaultLayout(assetsRoot);
 
 							// Load character sprites
 							const charSprites = await loadCharacterSprites(assetsRoot);
@@ -160,7 +166,7 @@ export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
 						// Always send saved layout (or null for default)
 						if (this.webview) {
 							console.log('[Extension] Sending saved layout');
-							sendLayout(this.context, this.webview);
+							sendLayout(this.context, this.webview, this.defaultLayout);
 						}
 					})();
 				} else {
@@ -171,6 +177,7 @@ export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
 							const bundled = path.join(ep, 'dist', 'assets');
 							if (fs.existsSync(bundled)) {
 								const distRoot = path.join(ep, 'dist');
+								this.defaultLayout = loadDefaultLayout(distRoot);
 								const cs = await loadCharacterSprites(distRoot);
 								if (cs && this.webview) {
 									sendCharacterSpritesToWebview(this.webview, cs);
@@ -186,7 +193,7 @@ export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
 							}
 						} catch { /* ignore */ }
 						if (this.webview) {
-							sendLayout(this.context, this.webview);
+							sendLayout(this.context, this.webview, this.defaultLayout);
 						}
 					})();
 				}
@@ -226,6 +233,24 @@ export class ArcadiaViewProvider implements vscode.WebviewViewProvider {
 				}
 			}
 		});
+	}
+
+	/** Export current saved layout to webview-ui/public/assets/default-layout.json (dev utility) */
+	exportDefaultLayout(): void {
+		const layout = this.context.workspaceState.get(WORKSPACE_KEY_LAYOUT, null);
+		if (!layout) {
+			vscode.window.showWarningMessage('Arcadia: No saved layout found in workspace state.');
+			return;
+		}
+		const workspaceRoot = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+		if (!workspaceRoot) {
+			vscode.window.showErrorMessage('Arcadia: No workspace folder found.');
+			return;
+		}
+		const targetPath = path.join(workspaceRoot, 'webview-ui', 'public', 'assets', 'default-layout.json');
+		const json = JSON.stringify(layout, null, 2);
+		fs.writeFileSync(targetPath, json, 'utf-8');
+		vscode.window.showInformationMessage(`Arcadia: Default layout exported to ${targetPath}`);
 	}
 
 	dispose() {

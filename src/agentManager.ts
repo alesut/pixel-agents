@@ -303,9 +303,11 @@ export function sendCurrentAgentStatuses(
 export function sendLayout(
 	context: vscode.ExtensionContext,
 	webview: vscode.Webview | undefined,
+	defaultLayout?: Record<string, unknown> | null,
 ): void {
 	if (!webview) return;
-	const layout = context.workspaceState.get(WORKSPACE_KEY_LAYOUT, null);
+	const saved = context.workspaceState.get(WORKSPACE_KEY_LAYOUT, null);
+	const layout = saved ?? defaultLayout ?? null;
 	webview.postMessage({
 		type: 'layoutLoaded',
 		layout,

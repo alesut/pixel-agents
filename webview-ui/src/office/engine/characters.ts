@@ -8,8 +8,10 @@ import {
   TYPE_FRAME_DURATION_SEC,
   WANDER_PAUSE_MIN_SEC,
   WANDER_PAUSE_MAX_SEC,
-  SEAT_SIT_MIN_SEC,
-  SEAT_SIT_MAX_SEC,
+  WANDER_MOVES_BEFORE_REST_MIN,
+  WANDER_MOVES_BEFORE_REST_MAX,
+  SEAT_REST_MIN_SEC,
+  SEAT_REST_MAX_SEC,
 } from '../../constants.js'
 
 /** Tools that show reading animation instead of typing */
@@ -64,6 +66,8 @@ export function createCharacter(
     frame: 0,
     frameTimer: 0,
     wanderTimer: 0,
+    wanderCount: 0,
+    wanderLimit: randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX),
     isActive: true,
     seatId,
     bubbleType: null,
@@ -103,6 +107,8 @@ export function updateCharacter(
         ch.frame = 0
         ch.frameTimer = 0
         ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC)
+        ch.wanderCount = 0
+        ch.wanderLimit = randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX)
       }
       break
     }
@@ -141,6 +147,21 @@ export function updateCharacter(
       // Countdown wander timer
       ch.wanderTimer -= dt
       if (ch.wanderTimer <= 0) {
+        // Check if we've wandered enough — return to seat for a rest
+        if (ch.wanderCount >= ch.wanderLimit && ch.seatId) {
+          const seat = seats.get(ch.seatId)
+          if (seat) {
+            const path = findPath(ch.tileCol, ch.tileRow, seat.seatCol, seat.seatRow, tileMap, blockedTiles)
+            if (path.length > 0) {
+              ch.path = path
+              ch.moveProgress = 0
+              ch.state = CharacterState.WALK
+              ch.frame = 0
+              ch.frameTimer = 0
+              break
+            }
+          }
+        }
         if (walkableTiles.length > 0) {
           const target = walkableTiles[Math.floor(Math.random() * walkableTiles.length)]
           const path = findPath(ch.tileCol, ch.tileRow, target.col, target.row, tileMap, blockedTiles)
@@ -150,6 +171,7 @@ export function updateCharacter(
             ch.state = CharacterState.WALK
             ch.frame = 0
             ch.frameTimer = 0
+            ch.wanderCount++
           }
         }
         ch.wanderTimer = randomRange(WANDER_PAUSE_MIN_SEC, WANDER_PAUSE_MAX_SEC)
@@ -184,13 +206,15 @@ export function updateCharacter(
             }
           }
         } else {
-          // Check if arrived at assigned seat — sit down temporarily before wandering
+          // Check if arrived at assigned seat — sit down for a rest before wandering again
           if (ch.seatId) {
             const seat = seats.get(ch.seatId)
             if (seat && ch.tileCol === seat.seatCol && ch.tileRow === seat.seatRow) {
               ch.state = CharacterState.TYPE
               ch.dir = seat.facingDir
-              ch.seatTimer = randomRange(SEAT_SIT_MIN_SEC, SEAT_SIT_MAX_SEC)
+              ch.seatTimer = randomRange(SEAT_REST_MIN_SEC, SEAT_REST_MAX_SEC)
+              ch.wanderCount = 0
+              ch.wanderLimit = randomInt(WANDER_MOVES_BEFORE_REST_MIN, WANDER_MOVES_BEFORE_REST_MAX)
               ch.frame = 0
               ch.frameTimer = 0
               break
@@ -264,4 +288,8 @@ export function getCharacterSprite(ch: Character, sprites: CharacterSprites): Sp
 
 function randomRange(min: number, max: number): number {
   return min + Math.random() * (max - min)
+}
+
+function randomInt(min: number, max: number): number {
+  return min + Math.floor(Math.random() * (max - min + 1))
 }

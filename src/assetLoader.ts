@@ -161,6 +161,29 @@ function pngToSpriteData(pngBuffer: Buffer, width: number, height: number): stri
   }
 }
 
+// ── Default layout loading ───────────────────────────────────
+
+/**
+ * Load the bundled default layout from assets/default-layout.json.
+ * Returns the parsed layout object or null if not found.
+ */
+export function loadDefaultLayout(assetsRoot: string): Record<string, unknown> | null {
+  try {
+    const layoutPath = path.join(assetsRoot, 'assets', 'default-layout.json')
+    if (!fs.existsSync(layoutPath)) {
+      console.log('[AssetLoader] No default-layout.json found at:', layoutPath)
+      return null
+    }
+    const content = fs.readFileSync(layoutPath, 'utf-8')
+    const layout = JSON.parse(content) as Record<string, unknown>
+    console.log(`[AssetLoader] ✅ Loaded default layout (${layout.cols}×${layout.rows})`)
+    return layout
+  } catch (err) {
+    console.error(`[AssetLoader] ❌ Error loading default layout: ${err instanceof Error ? err.message : err}`)
+    return null
+  }
+}
+
 // ── Wall tile loading ────────────────────────────────────────
 
 export interface LoadedWallTiles {

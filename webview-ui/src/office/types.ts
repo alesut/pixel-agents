@@ -187,6 +187,10 @@ export interface Character {
   frameTimer: number
   /** Timer for idle wander decisions */
   wanderTimer: number
+  /** Number of wander moves completed in current roaming cycle */
+  wanderCount: number
+  /** Max wander moves before returning to seat for rest */
+  wanderLimit: number
   /** Whether the agent is actively working */
   isActive: boolean
   /** Assigned seat uid, or null if no seat */
