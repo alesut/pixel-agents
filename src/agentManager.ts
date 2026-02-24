@@ -1,18 +1,17 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as os from 'os';
 import * as vscode from 'vscode';
 import type { AgentState, PersistedAgent } from './types.js';
 import { cancelWaitingTimer, cancelPermissionTimer } from './timerManager.js';
 import { startFileWatching, readNewLines, ensureProjectScan } from './fileWatcher.js';
-import { JSONL_POLL_INTERVAL_MS, TERMINAL_NAME_PREFIX, WORKSPACE_KEY_AGENTS, WORKSPACE_KEY_AGENT_SEATS } from './constants.js';
+import { JSONL_POLL_INTERVAL_MS, WORKSPACE_KEY_AGENTS, WORKSPACE_KEY_AGENT_SEATS } from './constants.js';
+import { getActiveAgentProvider } from './providers.js';
 import { migrateAndLoadLayout } from './layoutPersistence.js';
 
 export function getProjectDirPath(cwd?: string): string | null {
 	const workspacePath = cwd || vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
 	if (!workspacePath) return null;
-	const dirName = workspacePath.replace(/[:\\/]/g, '-');
-	return path.join(os.homedir(), '.claude', 'projects', dirName);
+	return getActiveAgentProvider().resolveProjectDir(workspacePath);
 }
 
 export function launchNewTerminal(
@@ -32,14 +31,15 @@ export function launchNewTerminal(
 ): void {
 	const idx = nextTerminalIndexRef.current++;
 	const cwd = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+	const provider = getActiveAgentProvider();
 	const terminal = vscode.window.createTerminal({
-		name: `${TERMINAL_NAME_PREFIX} #${idx}`,
+		name: `${provider.terminalNamePrefix} #${idx}`,
 		cwd,
 	});
 	terminal.show();
 
 	const sessionId = crypto.randomUUID();
-	terminal.sendText(`claude --session-id ${sessionId}`);
+	terminal.sendText(provider.buildLaunchCommand(sessionId));
 
 	const projectDir = getProjectDirPath(cwd);
 	if (!projectDir) {

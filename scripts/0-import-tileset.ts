@@ -3,7 +3,7 @@
  * Pixel Agents Tileset Import Skill - Complete CLI wrapper for 7-stage asset extraction pipeline
  *
  * Usage:
- *   npx ts-node scripts/import-tileset-cli.ts
+ *   npm run import-tileset
  *
  * This script guides you through the complete process of extracting furniture assets
  * from a tileset PNG file and integrating them into the Pixel Agents extension.
@@ -151,7 +151,7 @@ async function runStage1(tilesetFile: string) {
   if (confirm.toLowerCase() === 'y') {
     try {
       console.log('\n🔄 Running detection...')
-      execSync('npx ts-node scripts/detect-tileset-assets.ts', { stdio: 'inherit' })
+      execSync('npx ts-node scripts/1-detect-assets.ts', { stdio: 'inherit' })
       console.log('\n✅ Stage 1 complete!')
       return true
     } catch (err) {
@@ -169,7 +169,7 @@ async function runStage2() {
   console.log('Input: tileset-detection-output.json')
   console.log('Output: asset-editor-output.json')
   console.log()
-  console.log('📝 Open scripts/asset-editor.html in a web browser to edit assets')
+  console.log('📝 Open scripts/2-asset-editor.html in a web browser to edit assets')
   console.log('   1. Adjust bounding boxes')
   console.log('   2. Split stuck/overlapped assets')
   console.log('   3. Erase unwanted pixels')
@@ -215,7 +215,7 @@ async function runStage3() {
   if (confirm.toLowerCase() === 'y') {
     try {
       console.log('\n🔄 Running vision inspection...')
-      execSync('npx ts-node scripts/inspect-assets.ts', { stdio: 'inherit' })
+      execSync('npx ts-node scripts/3-vision-inspect.ts', { stdio: 'inherit' })
       console.log('\n✅ Stage 3 complete!')
       return true
     } catch (err) {
@@ -233,7 +233,7 @@ async function runStage4() {
   console.log('Input: tileset-metadata-draft.json')
   console.log('Output: tileset-metadata-final.json')
   console.log()
-  console.log('📝 Open scripts/review-assets.html in a web browser to review')
+  console.log('📝 Open scripts/4-review-metadata.html in a web browser to review')
   console.log('   1. View asset previews (4x zoom with grid)')
   console.log('   2. Edit metadata: name, label, category')
   console.log('   3. Set footprint dimensions (in tiles)')
@@ -272,14 +272,14 @@ async function runStage5() {
   console.log('─'.repeat(60))
   console.log('Export approved assets as PNG files + generate furniture-catalog.json')
   console.log('Input: tileset-metadata-final.json + office_tileset_16x16.png')
-  console.log('Output: assets/furniture/{category}/{id}.png + furniture-catalog.json')
+  console.log('Output: webview-ui/public/assets/furniture/{category}/{id}.png + furniture-catalog.json')
   console.log()
 
   const confirm = await question('Run Stage 5? (y/n): ')
   if (confirm.toLowerCase() === 'y') {
     try {
       console.log('\n🔄 Exporting assets...')
-      execSync('npx ts-node scripts/export-tileset-assets.ts', { stdio: 'inherit' })
+      execSync('npx ts-node scripts/5-export-assets.ts', { stdio: 'inherit' })
       console.log('\n✅ Stage 5 complete!')
       return true
     } catch (err) {
@@ -299,7 +299,7 @@ async function runStage6() {
   console.log('   npm run build')
   console.log()
   console.log('📦 The extension now:')
-  console.log('   • Bundles assets/furniture/* in dist/')
+  console.log('   • Bundles webview-ui/public/assets/furniture/* in dist/')
   console.log('   • Loads assets from dist/assets/ at runtime')
   console.log('   • Works in any directory (no workspace dependency)')
   console.log('   • Shows ONLY your custom assets (hides hardcoded furniture)')
@@ -370,7 +370,7 @@ async function runPipeline() {
   console.log('   Stage 2: ✅ Assets edited')
   console.log('   Stage 3: ✅ Metadata generated')
   console.log('   Stage 4: ✅ Metadata reviewed')
-  console.log('   Stage 5: ✅ Assets exported to assets/furniture/')
+  console.log('   Stage 5: ✅ Assets exported to webview-ui/public/assets/furniture/')
   console.log('   Stage 6: ✅ Extension bundled')
   console.log()
   console.log('🚀 Next steps:')
@@ -379,7 +379,7 @@ async function runPipeline() {
   console.log('   3. Click "Edit" → "Place" to see all your furniture')
   console.log()
   console.log('To run another tileset, execute:')
-  console.log('   npx ts-node scripts/import-tileset-cli.ts')
+  console.log('   npm run import-tileset')
   console.log()
 }
 

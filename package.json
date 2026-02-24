@@ -59,7 +59,12 @@
     "package": "npm run check-types && npm run lint && node esbuild.js --production && npm run build:webview",
     "check-types": "tsc --noEmit",
     "lint": "eslint src",
-    "import-tileset": "tsx scripts/import-tileset-cli.ts"
+    "import-tileset": "tsx scripts/0-import-tileset.ts",
+    "build:desktop:webview": "npm --prefix webview-ui run build -- --mode standalone",
+    "desktop:start": "electron desktop/main.cjs",
+    "desktop:dev:webview": "npm --prefix webview-ui run preview -- --host 127.0.0.1 --port 4173 --strictPort",
+    "desktop:dev": "npm run build:desktop:webview && PIXEL_AGENTS_DESKTOP_DEV=1 npm-run-all -p desktop:dev:webview desktop:start",
+    "desktop:build": "npm run build:desktop:webview"
   },
   "devDependencies": {
     "@anthropic-ai/sdk": "^0.74.0",
@@ -72,6 +77,7 @@
     "pngjs": "^7.0.0",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.54.0"
+    "typescript-eslint": "^8.54.0",
+    "electron": "^33.2.1"
   }
 }

@@ -45,6 +45,26 @@ npm run build
 
 Then press **F5** in VS Code to launch the Extension Development Host.
 
+### Standalone Electron preview (macOS-first)
+
+A minimal standalone shell is now available for local iteration:
+
+```bash
+npm install
+cd webview-ui && npm install && cd ..
+npm run desktop:build
+npm run desktop:start
+```
+
+The desktop app auto-discovers Codex sessions from `~/.codex/sessions` for the current working directory.  
+Start Codex in the same project folder (for example: `cd /path/to/project && codex`) and agents will appear in Pixel Agents.
+
+For extension runtime provider selection, you can switch to Codex with:
+
+```bash
+PIXEL_AGENTS_PROVIDER=codex
+```
+
 ### Usage
 
 1. Open the **Pixel Agents** panel (it appears in the bottom panel area alongside your terminal)
@@ -95,6 +115,12 @@ The webview runs a lightweight game loop with canvas rendering, BFS pathfinding,
 - **Agent-terminal sync** — the way agents are connected to Claude Code terminal instances is not super robust and sometimes desyncs, especially when terminals are rapidly opened/closed or restored across sessions.
 - **Heuristic-based status detection** — Claude Code's JSONL transcript format does not provide clear signals for when an agent is waiting for user input or when it has finished its turn. The current detection is based on heuristics (idle timers, turn-duration events) and often misfires — agents may briefly show the wrong status or miss transitions.
 - **Windows-only testing** — the extension has only been tested on Windows 11. It may work on macOS or Linux, but there could be unexpected issues with file watching, paths, or terminal behavior on those platforms.
+
+## Standalone macOS app plan
+
+We are actively planning a Codex-first standalone desktop app using Electron.
+
+- See the migration blueprint: [`docs/electron-standalone-plan.md`](docs/electron-standalone-plan.md)
 
 ## Roadmap
 

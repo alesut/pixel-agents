@@ -7,7 +7,7 @@ import { buildDynamicCatalog } from '../office/layout/furnitureCatalog.js'
 import { setFloorSprites } from '../office/floorTiles.js'
 import { setWallSprites } from '../office/wallTiles.js'
 import { setCharacterTemplates } from '../office/sprites/spriteData.js'
-import { vscode } from '../vscodeApi.js'
+import { bridge } from '../bridge.js'
 import { playDoneSound, setSoundEnabled } from '../notificationSound.js'
 
 export interface SubagentCharacter {
@@ -52,7 +52,7 @@ function saveAgentSeats(os: OfficeState): void {
     if (ch.isSubagent) continue
     seats[ch.id] = { palette: ch.palette, hueShift: ch.hueShift, seatId: ch.seatId }
   }
-  vscode.postMessage({ type: 'saveAgentSeats', seats })
+  bridge.postMessage({ type: 'saveAgentSeats', seats })
 }
 
 export function useExtensionMessages(
@@ -76,8 +76,8 @@ export function useExtensionMessages(
     // Buffer agents from existingAgents until layout is loaded
     let pendingAgents: Array<{ id: number; palette?: number; hueShift?: number; seatId?: string }> = []
 
-    const handler = (e: MessageEvent) => {
-      const msg = e.data
+    const handler = (incoming: unknown) => {
+      const msg = incoming as Record<string, unknown>
       const os = getOfficeState()
 
       if (msg.type === 'layoutLoaded') {
@@ -343,9 +343,9 @@ export function useExtensionMessages(
         }
       }
     }
-    window.addEventListener('message', handler)
-    vscode.postMessage({ type: 'webviewReady' })
-    return () => window.removeEventListener('message', handler)
+    const dispose = bridge.onMessage(handler)
+    bridge.postMessage({ type: 'webviewReady' })
+    return () => dispose()
   }, [getOfficeState])
 
   return { agents, selectedAgent, agentTools, agentStatuses, subagentTools, subagentCharacters, layoutReady, loadedAssets }
